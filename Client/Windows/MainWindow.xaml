@@ -1,0 +1,29 @@
+<metro:MetroWindow
+  x:Class="Client.WindowSpace.MainWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+  xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+  xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+  xmlns:wnd="clr-namespace:Client.WindowSpace"
+  xmlns:ctrl="clr-namespace:Client.ControlSpace"
+  xmlns:local="clr-namespace:Client"
+  mc:Ignorable="d"
+  Height="450"
+  Width="800"
+  Title="Options"
+  WindowStartupLocation="CenterScreen"
+  Closed="OnWindowClose"
+  x:Name="WindowContainer">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource ContainerBackground}">
+    <StackPanel x:Name="GridContainer">
+      <Border Padding="15,15,15,0">
+        <ctrl:ChainInputPanelControl />
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+
+</metro:MetroWindow>

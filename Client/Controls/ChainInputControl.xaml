@@ -1,0 +1,77 @@
+<UserControl
+  x:Class="Client.ControlSpace.ChainInputControl"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+  xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+  xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+  mc:Ignorable="d" 
+  d:DesignHeight="50"
+  d:DesignWidth="300"
+  x:Name="ChainContainer">
+
+  <Border>
+
+    <Grid>
+
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"></ColumnDefinition>
+        <ColumnDefinition></ColumnDefinition>
+        <ColumnDefinition Width="Auto"></ColumnDefinition>
+        <ColumnDefinition></ColumnDefinition>
+        <ColumnDefinition Width="Auto"></ColumnDefinition>
+        <ColumnDefinition Width="Auto"></ColumnDefinition>
+      </Grid.ColumnDefinitions>
+
+      <TextBlock
+        Grid.Column="0"
+        Foreground="White"
+        VerticalAlignment="Center"
+        Margin="0,0,15,0">Symbol
+      </TextBlock>
+      
+      <TextBox
+        Grid.Column="1"
+        x:Name="SymbolInput"
+        Text="{ Binding Symbol, ElementName=ChainContainer }"
+        VerticalContentAlignment="Center"
+        Foreground="Black"
+        Background="White"
+        Margin="0,0,15,0" />
+      
+      <TextBlock
+        Grid.Column="2"
+        Foreground="White"
+        VerticalAlignment="Center"
+        Margin="0,0,15,0">Expiration
+      </TextBlock>
+      
+      <TextBox
+        Grid.Column="3"
+        x:Name="ExpirationInput"
+        Text="{ Binding Expiration, ElementName=ChainContainer }"
+        VerticalContentAlignment="Center"
+        Foreground="Black"
+        Background="White"
+        Margin="0,0,15,0" />
+      
+      <Button
+        Grid.Column="4"
+        Background="LimeGreen"
+        Margin="0,0,15,0"
+        Click="OnCreate">Create
+      </Button>
+
+      <Button
+        Grid.Column="5"
+        Background="OrangeRed"
+        Click="OnRemove">Remove
+      </Button>
+
+    </Grid>
+
+  </Border>
+
+</UserControl>

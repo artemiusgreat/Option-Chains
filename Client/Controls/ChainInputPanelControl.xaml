@@ -1,0 +1,70 @@
+<UserControl
+  x:Class="Client.ControlSpace.ChainInputPanelControl"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+  xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+  xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+  xmlns:ctrl="clr-namespace:Client.ControlSpace"
+  mc:Ignorable="d" 
+  d:DesignHeight="50"
+  d:DesignWidth="300"
+  x:Name="ChainContainer">
+
+  <StackPanel x:Name="GridContainer">
+
+    <Border Cursor="Hand" Padding="15,15,15,15" Margin="0,0,0,15" VerticalAlignment="Top" Background="{DynamicResource ContentBackground}" MouseDown="OnSymbolCollapse">
+      <Grid>
+
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"></ColumnDefinition>
+          <ColumnDefinition Width="Auto"></ColumnDefinition>
+          <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
+        <iconPacks:PackIconFontAwesome
+            Grid.Column="0"
+            x:Name="SymbolCollapseControl"
+            Width="10"
+            Height="10"
+            Margin="0,0,10,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Kind="ChevronCircleRightSolid"
+            Foreground="White" />
+        <TextBlock
+            Grid.Column="1"
+            Margin="0,0,15,0"
+            Foreground="White"
+            VerticalAlignment="Center">
+            Chains
+        </TextBlock>
+        <ComboBox
+            Grid.Column="2"
+            HorizontalAlignment="Right"
+            Foreground="White"
+            Width="100"
+            Name="ComboSymbolActions"
+            Text="Actions"
+            BorderThickness="0,0,0,0"
+            IsEditable="True"
+            IsReadOnly="True"
+            SelectionChanged="OnSymbolActionSelection" />
+      </Grid>
+    </Border>
+
+    <Border x:Name="SymbolPanel" Padding="15,15,15,0" Margin="0,0,0,15" VerticalAlignment="Top" Background="{DynamicResource ContentBackground}" Visibility="Collapsed">
+      <ItemsControl x:Name="SymbolInputsContainer">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ctrl:ChainInputControl Margin="0,0,0,15" Height="30" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Border>
+
+  </StackPanel>
+
+</UserControl>
