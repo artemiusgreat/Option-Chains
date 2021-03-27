@@ -29,6 +29,9 @@ namespace Gateway.Tradier.ModelSpace
     [JsonProperty("volume")]
     public double? Volume { get; set; }
 
+    [JsonProperty("average_volume")]
+    public double? AverageVolume { get; set; }
+
     [JsonProperty("bid")]
     public double? Bid { get; set; }
 

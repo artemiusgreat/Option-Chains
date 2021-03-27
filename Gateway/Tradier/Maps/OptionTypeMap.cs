@@ -4,9 +4,9 @@ namespace Gateway.Tradier.ModelSpace
 {
   public class OptionTypeMap
   {
-    public static OptionSideEnum? Input(string orderStatus)
+    public static OptionSideEnum? Input(string side)
     {
-      switch ($"{ orderStatus }".ToUpper())
+      switch ($"{ side }".ToUpper())
       {
         case "PUT": return OptionSideEnum.Put;
         case "CALL": return OptionSideEnum.Call;

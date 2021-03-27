@@ -27,7 +27,7 @@ namespace Client.ControlSpace
     public IList<ChainInputModel> Chains { get; set; }
     public Func<IInstrumentOptionModel, bool> Where { get; set; } = item => true;
     public Func<IInstrumentOptionModel, double?> Select { get; set; } = item => 0.0;
-    public Func<IEnumerable<IInstrumentOptionModel>, double?> SelectMany { get; set; } = items => 0.0;
+    public Func<IEnumerable<IInstrumentOptionModel>, double?, double?, double?> SelectMany { get; set; } = (items, strike, price) => 0.0;
 
     /// <summary>
     /// Constructor
@@ -79,6 +79,8 @@ namespace Client.ControlSpace
     /// </summary>
     private async Task OnData()
     {
+      // Get price
+
       var instrument = (await DataService
         .GetInstruments(Chains.Select(o => o.Symbol).ToList()))
         .FirstOrDefault()
@@ -137,7 +139,9 @@ namespace Client.ControlSpace
       var index = 0;
       var minSum = 0.0;
       var maxSum = 0.0;
+      var currentPrice = instrument.Point.Price.Value;
       var summaries = new InstrumentOptionModel[options.Count];
+      var sources = new Dictionary<string, ISeriesModel>();
 
       while (true)
       {
@@ -151,7 +155,7 @@ namespace Client.ControlSpace
 
         if (curMins.Value != null)
         {
-          minSum += SelectMany(curMins.Value).Value;
+          minSum += SelectMany(curMins.Value, curMins.Key, currentPrice).Value;
           summaries[closeIndex - index] = new InstrumentOptionModel
           {
             Strike = curMins.Key,
@@ -162,7 +166,7 @@ namespace Client.ControlSpace
 
         if (curMaxs.Value != null)
         {
-          maxSum += SelectMany(curMaxs.Value).Value;
+          maxSum += SelectMany(curMaxs.Value, curMaxs.Key, currentPrice).Value;
           summaries[closeIndex + index] = new InstrumentOptionModel
           {
             Strike = curMaxs.Key,
@@ -189,7 +193,7 @@ namespace Client.ControlSpace
           case OptionSideEnum.Call: seriesColor = Brushes.LimeGreen.Color; break;
         }
 
-        series[seriesName] = new SeriesModel
+        sources[seriesName] = series[seriesName] = new SeriesModel
         {
           Name = seriesName,
           Shape = new BarSeries(),
@@ -217,13 +221,14 @@ namespace Client.ControlSpace
         point["Strike"] = strike;
 
         return point as Chart.ModelSpace.IPointModel;
-      });
+
+      }).ToList();
 
       // Set appropriate number of series on the chart 
 
-      if (points.Any())
+      if (sources.Any())
       {
-        View.Composer.Group.Series = points.First().Areas[_name].Series;
+        View.Composer.Group.Series = sources;
       }
 
       await Dispatcher.BeginInvoke(new Action(() =>

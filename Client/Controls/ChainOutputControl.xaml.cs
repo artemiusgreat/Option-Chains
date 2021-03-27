@@ -25,8 +25,8 @@ namespace Client.ControlSpace
 
     public bool Variance { get; set; } = true;
     public IList<ChainInputModel> Chains { get; set; }
-    public Func<IInstrumentOptionModel, bool> Where { get; set; } = (item) => true;
-    public Func<IInstrumentOptionModel, double?> Select { get; set; } = (items) => 0.0;
+    public Func<IInstrumentOptionModel, bool> Where { get; set; } = item => true;
+    public Func<IInstrumentOptionModel, double?, double?> Select { get; set; } = (items, price) => 0.0;
 
     /// <summary>
     /// Constructor
@@ -78,6 +78,20 @@ namespace Client.ControlSpace
     /// </summary>
     private async Task OnData()
     {
+      // Get price
+
+      var instrument = (await DataService
+        .GetInstruments(Chains.Select(o => o.Symbol).ToList()))
+        .FirstOrDefault()
+        .Value;
+
+      if (instrument == null)
+      {
+        return;
+      }
+
+      // Get chains
+
       var optionQueries = Chains.Select(chain =>
       {
         var inputs = new Dictionary<dynamic, dynamic>
@@ -100,6 +114,8 @@ namespace Client.ControlSpace
 
       // Create points with values for each expiration
 
+      var currentPrice = instrument.Point.Price.Value;
+      var sources = new Dictionary<string, ISeriesModel>();
       var points = options.Select(o =>
       {
         var strike = o.Key;
@@ -113,20 +129,20 @@ namespace Client.ControlSpace
           var seriesColor = Brushes.Black.Color;
           var seriesName = $"{option.Side} - {option.ExpirationDate:yyyy-MM-dd}";
 
-          switch (option.Side)
+          switch (option.Side.Value)
           {
             case OptionSideEnum.Put: seriesColor = Brushes.OrangeRed.Color; break;
             case OptionSideEnum.Call: seriesColor = Brushes.LimeGreen.Color; break;
           }
 
-          series[seriesName] = new SeriesModel
+          sources[seriesName] = series[seriesName] = new SeriesModel
           {
             Name = seriesName,
             Shape = new BarSeries(),
             Model = new ExpandoModel
             {
               ["Color"] = seriesColor,
-              ["Point"] = Select(option)
+              ["Point"] = Select(option, currentPrice)
             }
           };
         }
@@ -148,13 +164,14 @@ namespace Client.ControlSpace
         point["Strike"] = strike;
 
         return point as Chart.ModelSpace.IPointModel;
-      });
+
+      }).ToList();
 
       // Set appropriate number of series on the chart 
 
-      if (points.Any())
+      if (sources.Any())
       {
-        View.Composer.Group.Series = points.First().Areas[_name].Series;
+        View.Composer.Group.Series = sources;
       }
 
       await Dispatcher.BeginInvoke(new Action(() =>

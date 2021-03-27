@@ -296,7 +296,6 @@ namespace Gateway.Tradier
     public override async Task<IList<IInstrumentOptionModel>> GetOptionChains(IDictionary<dynamic, dynamic> inputs)
     {
       var options = new List<IInstrumentOptionModel>();
-      var response1 = await GetResponse<dynamic>($"/v1/markets/options/chains", inputs);
       var response = await GetResponse<InputOptionChainDataModel>($"/v1/markets/options/chains", inputs);
 
       foreach (var inputOption in response?.Chains?.Chain ?? new List<InputOptionModel>())
@@ -315,10 +314,12 @@ namespace Gateway.Tradier
           Point = pointModel,
           Strike = inputOption.Strike,
           Volume = inputOption.Volume,
+          AverageVolume = inputOption.AverageVolume,
           ContractSize = inputOption.ContractSize,
           OpenInterest = inputOption.OpenInterest,
+          ExpirationDate = inputOption.ExpirationDate,
           Side = OptionTypeMap.Input(inputOption.OptionType),
-          Greeks = new InstrumentOptionVarianceModel
+          Variance = new InstrumentOptionVarianceModel
           {
             Vega = inputOption.Greeks.Vega,
             Delta = inputOption.Greeks.Delta,

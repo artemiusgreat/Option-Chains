@@ -45,15 +45,24 @@ namespace Client.ControlSpace
     /// </summary>
     public ObservableCollection<string> SymbolActions { get; } = new ObservableCollection<string>
     {
-      "Ask vs Bid",
-      "Open Interest",
-      "Volume vs Interest",
+      "Bid",
+      "Ask",
+      "Bid vs Ask",
+      "Bid vs Ask Delta",
+      "Volume",
+      "Interest",
+      "Interest vs Volume Delta",
       "Implied Volatility",
       "Distribution",
       "Delta",
       "Gamma",
       "Vega",
-      "Open Interest - Summary"
+      "Calls Interest - Summary",
+      "Puts Interest - Summary",
+      "Interest Delta - Summary",
+      "Trend - Summary",
+      "Counter Trend - Summary",
+      "Bid vs Ask Delta - Summary"
     };
 
     /// <summary>
@@ -228,36 +237,83 @@ namespace Client.ControlSpace
 
       switch (selection)
       {
-        case "Ask vs Bid":
+        case "Bid":
 
           ShowChart(selection, new ChainOutputControl
           {
             Variance = false,
             Chains = chains,
-            Select = o => o.Point.BidSize - o.Point.AskSize,
+            Select = (option, price) => option.Point.BidSize,
             Where = o => o.Point.AskSize > 0 && o.Point.BidSize > 0
           });
 
           break;
 
-        case "Open Interest":
+        case "Ask":
 
           ShowChart(selection, new ChainOutputControl
           {
             Variance = false,
             Chains = chains,
-            Select = o => o.OpenInterest
+            Select = (option, price) => option.Point.AskSize,
+            Where = o => o.Point.AskSize > 0 && o.Point.BidSize > 0
           });
 
           break;
 
-        case "Volume vs Interest":
+        case "Bid vs Ask":
 
           ShowChart(selection, new ChainOutputControl
           {
             Variance = false,
             Chains = chains,
-            Select = o => o.OpenInterest - o.Volume
+            Select = (option, price) => option.Strike.Value > price ? option.Point.AskSize : option.Point.BidSize,
+            Where = o => o.Point.AskSize > 0 && o.Point.BidSize > 0
+          });
+
+          break;
+
+        case "Bid vs Ask Delta":
+
+          ShowChart(selection, new ChainOutputControl
+          {
+            Variance = false,
+            Chains = chains,
+            Select = (option, price) => option.Point.BidSize - option.Point.AskSize,
+            Where = o => o.Point.AskSize > 0 && o.Point.BidSize > 0
+          });
+
+          break;
+
+        case "Volume":
+
+          ShowChart(selection, new ChainOutputControl
+          {
+            Variance = false,
+            Chains = chains,
+            Select = (option, price) => option.Volume
+          });
+
+          break;
+
+        case "Interest":
+
+          ShowChart(selection, new ChainOutputControl
+          {
+            Variance = false,
+            Chains = chains,
+            Select = (option, price) => option.OpenInterest
+          });
+
+          break;
+
+        case "Interest vs Volume Delta":
+
+          ShowChart(selection, new ChainOutputControl
+          {
+            Variance = false,
+            Chains = chains,
+            Select = (option, price) => option.OpenInterest - option.Volume
           });
 
           break;
@@ -268,7 +324,7 @@ namespace Client.ControlSpace
           {
             Variance = true,
             Chains = chains,
-            Select = o => o.Greeks.Iv
+            Select = (option, price) => option.Variance.Iv
           });
 
           break;
@@ -279,7 +335,7 @@ namespace Client.ControlSpace
           {
             Variance = true,
             Chains = chains,
-            Select = o => o.Greeks.Distribution
+            Select = (option, price) => option.Variance.Distribution
           });
 
           break;
@@ -290,7 +346,7 @@ namespace Client.ControlSpace
           {
             Variance = true,
             Chains = chains,
-            Select = o => o.Greeks.Delta
+            Select = (option, price) => option.Variance.Delta
           });
 
           break;
@@ -301,7 +357,7 @@ namespace Client.ControlSpace
           {
             Variance = true,
             Chains = chains,
-            Select = o => o.Greeks.Gamma
+            Select = (option, price) => option.Variance.Gamma
           });
 
           break;
@@ -312,22 +368,157 @@ namespace Client.ControlSpace
           {
             Variance = true,
             Chains = chains,
-            Select = o => o.Greeks.Vega
+            Select = (option, price) => option.Variance.Vega
           });
 
           break;
 
-        case "Open Interest - Summary":
+        case "Calls Interest - Summary":
 
           ShowChart(selection, new CascadeOutputControl
           {
             Variance = true,
             Chains = chains,
-            SelectMany = items => items.Where(o => Equals(o.Side, OptionSideEnum.Call)).Sum(o => o.OpenInterest)
+            SelectMany = (items, strike, price) => items.Where(o => Equals(o.Side, OptionSideEnum.Call)).Sum(o => o.OpenInterest)
           });
 
           break;
 
+        case "Puts Interest - Summary":
+
+          ShowChart(selection, new CascadeOutputControl
+          {
+            Variance = true,
+            Chains = chains,
+            SelectMany = (items, strike, price) => items.Where(o => Equals(o.Side, OptionSideEnum.Put)).Sum(o => o.OpenInterest)
+          });
+
+          break;
+
+        case "Interest Delta - Summary":
+
+          ShowChart(selection, new CascadeOutputControl
+          {
+            Variance = true,
+            Chains = chains,
+            SelectMany = (items, strike, price) =>
+            {
+              var puts = 0.0;
+              var calls = 0.0;
+
+              foreach (var option in items)
+              {
+                switch (option.Side)
+                {
+                  case OptionSideEnum.Put: puts += option.OpenInterest.Value; break;
+                  case OptionSideEnum.Call: calls += option.OpenInterest.Value; break;
+                }
+              }
+
+              return strike > price ? calls - puts : puts - calls;
+            }
+          });
+
+          break;
+
+        case "Trend - Summary":
+
+          ShowChart(selection, new CascadeOutputControl
+          {
+            Variance = true,
+            Chains = chains,
+            SelectMany = (items, strike, price) =>
+            {
+              var putBids = 0.0;
+              var putAsks = 0.0;
+              var callBids = 0.0;
+              var callAsks = 0.0;
+
+              foreach (var option in items)
+              {
+                switch (option.Side)
+                {
+                  case OptionSideEnum.Put: putBids += option.Point.BidSize.Value; putAsks += option.Point.AskSize.Value; break;
+                  case OptionSideEnum.Call: callBids += option.Point.BidSize.Value; callAsks += option.Point.AskSize.Value; break;
+                }
+              }
+
+              if (strike > price)
+              {
+                return callBids + putAsks;
+              }
+
+              return putBids + callAsks;
+            }
+          });
+
+          break;
+
+        case "Counter Trend - Summary":
+
+          ShowChart(selection, new CascadeOutputControl
+          {
+            Variance = true,
+            Chains = chains,
+            SelectMany = (items, strike, price) =>
+            {
+              var putBids = 0.0;
+              var putAsks = 0.0;
+              var callBids = 0.0;
+              var callAsks = 0.0;
+
+              foreach (var option in items)
+              {
+                switch (option.Side)
+                {
+                  case OptionSideEnum.Put: putBids += option.Point.BidSize.Value; putAsks += option.Point.AskSize.Value; break;
+                  case OptionSideEnum.Call: callBids += option.Point.BidSize.Value; callAsks += option.Point.AskSize.Value; break;
+                }
+              }
+
+              if (strike > price)
+              {
+                return callAsks + putBids;
+              }
+
+              return putAsks + callBids;
+            }
+          });
+
+          break;
+
+        case "Bid vs Ask Delta - Summary":
+
+          ShowChart(selection, new CascadeOutputControl
+          {
+            Variance = true,
+            Chains = chains,
+            SelectMany = (items, strike, price) =>
+            {
+              var putBids = 0.0;
+              var putAsks = 0.0;
+              var callBids = 0.0;
+              var callAsks = 0.0;
+
+              foreach (var option in items)
+              {
+                switch (option.Side)
+                {
+                  case OptionSideEnum.Put: putBids += option.Point.BidSize.Value; putAsks += option.Point.AskSize.Value; break;
+                  case OptionSideEnum.Call: callBids += option.Point.BidSize.Value; callAsks += option.Point.AskSize.Value; break;
+                }
+              }
+
+              if (strike > price)
+              {
+                return (callBids - callAsks) + (putAsks - putBids);
+              }
+
+              return (putBids - putAsks) + (callAsks - callBids);
+            }
+          });
+
+          break;
       }
     }
   }
